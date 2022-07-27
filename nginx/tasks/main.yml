@@ -1,0 +1,121 @@
+---
+  - name: Print Server Distribution Info
+    ansible.builtin.debug:
+      var:  ansible_facts.distribution
+
+  - name: Print Server OS_Family Info
+    ansible.builtin.debug:
+      var:  ansible_facts.os_family
+
+  - name: Nginx Installation for Debian/Ubuntu
+    block:   
+      - name: Install Nginx on Debian
+        apt:
+         name: nginx
+         state: latest
+         update_cache: yes
+      
+      - name: Copy ssl files
+        template:
+          src: "{{ item.src }}"
+          dest: "{{ item.dest }}"
+        with_items:
+          - { src: wildcard.ssl.cer, dest: '/etc/ssl/wildcard.ssl.cer' }
+          - { src: wildcard.ssl.key, dest: '/etc/ssl/wildcard.ssl.key' }
+
+      - name: Copy debian-nginx-conf-sample file to and replace file nginx.conf
+        template:
+         src: debian-nginx-conf-sample
+         dest: /etc/nginx/nginx.conf
+         owner: root
+         group: root
+         mode: '0644'
+
+      - name: Copy dhparam1.pem file to /etc/nginx/ssl/dhparam1.pem
+        template:
+         src: dhparam1.pem
+         dest: /etc/nginx/ssl/
+         owner: root
+         group: root
+         mode: '0644'
+
+      - name: Copy protect.conf file to /etc/nginx/common/protect.conf
+        template:
+         src: protect.conf
+         dest: /etc/nginx/common/
+         owner: root
+         group: root
+         mode: '0644'
+
+      - name: Copy nginx-sample file to and create file in sites-available
+        template:
+         src: nginx-sample
+         dest: "{{ nginx_path }}/{{ UserName }}.kartrocket.com.conf"
+         owner: root
+         group: root
+         mode: '0644'
+
+      - name: Create a symbolic link of nginx config file in sites-enabled
+        ansible.builtin.file:
+         src: "{{ cnf_file_path }}"
+         dest: "{{ cnf_file_symlnk }}"
+         owner: root
+         group: root
+         state: link
+    when: (ansible_facts['distribution'] == "Ubuntu") or (ansible_facts['os_family'] == "Debian")
+    become: true
+
+  - name: Nginx Installation for CentOS/RedHat
+    block:
+      - name: Add epel-release repo
+        yum:
+          name: epel-release
+          state: present
+
+      - name: Install Nginx on CentOS/RedHat
+        yum:
+         name: nginx
+         state: latest
+         update_cache: yes
+
+      - name: Copy ssl files
+        template:
+          src: "{{ item.src }}"
+          dest: "{{ item.dest }}"
+        with_items:
+          - { src: wildcard.ssl.cer, dest: '/etc/ssl/wildcard.ssl.cer' }
+          - { src: wildcard.ssl.key, dest: '/etc/ssl/wildcard.ssl.key' }
+
+      - name: Copy centos-nginx-conf-sample file to and replace file nginx.conf
+        template:
+         src: centos-nginx-conf-sample
+         dest: /etc/nginx/nginx.conf
+         owner: root
+         group: root
+         mode: '0644'
+      
+      - name: Copy dhparam1.pem file to /etc/nginx/ssl/dhparam1.pem
+        template:
+         src: dhparam1.pem
+         dest: /etc/nginx/ssl/
+         owner: root
+         group: root
+         mode: '0644'
+
+      - name: Copy protect.conf file to /etc/nginx/common/protect.conf
+        template:
+         src: protect.conf
+         dest: /etc/nginx/common/
+         owner: root
+         group: root
+         mode: '0644'
+
+      - name: Copy nginx-sample file to and create file in conf.d
+        template:
+         src: nginx-sample
+         dest: "/etc/nginx/conf.d/{{ UserName }}.kartrocket.com.conf"
+         owner: root
+         group: root
+         mode: '0644'
+    when: (ansible_facts['distribution'] == "CentOS") or (ansible_facts['os_family'] == "RedHat")
+    become: true

@@ -1,0 +1,7 @@
+---
+- hosts: "{{ target_server }}"
+  connection: local
+  vars_files:
+    - nginx/vars/main.yml
+  roles:
+    - nginx

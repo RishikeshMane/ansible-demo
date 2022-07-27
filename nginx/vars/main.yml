@@ -1,0 +1,11 @@
+---
+UserName : default
+upstream : "{{ UserName }}"
+access_log : "/var/log/nginx/{{ UserName }}-access.log"
+error_log : "/var/log/nginx/{{ UserName }}-error.log"
+nginx_file : "{{ UserName }}.kartrocket.com.conf"
+nginx_path : /etc/nginx/sites-available
+cnf_file_path : "{{ nginx_path }}/{{ nginx_file }}"
+cnf_file_symlnk : "/etc/nginx/sites-enabled/{{ nginx_file }}"
+centos_cnf_file_path : "etc/nginx/conf.d/{{ nginx_file }}"
+
